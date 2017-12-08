@@ -17,8 +17,11 @@ class Webhook
      */
     public function __construct($config)
     {
-        $config['log_path'] = isset($config['log_path']) ? $config['log_path'] : __DIR__ . '/';
-        $config['log_name'] = isset($config['log_name']) ? $config['log_name'] : 'update_git.log';
+        $config['log_path'] = isset($config['log_path']) ? : __DIR__ . '/';
+        $config['log_name'] = isset($config['log_name']) ? : 'update_git.log';
+        //默认master分支
+        $config['branch'] = isset($config['branch']) ? : 'master';
+
         if (!isset($config['token_field'])) {
             $this->errorLog('token field not found');
         }
@@ -77,12 +80,12 @@ class Webhook
     /**
      * 校验分支
      */
-    public function checkBranch($branch = 'master')
+    public function checkBranch()
     {
         $current = substr(strrchr($this->post['ref'], "/"), 1);
         $this->accessLog("branch is $current");
 
-        return $current == $branch;
+        return $current == $this->config['branch'];
     }
 
     /**
