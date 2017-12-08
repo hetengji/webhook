@@ -8,8 +8,8 @@
 class Webhook
 {
     public $config;
-    private $start;
-
+    public $start;
+    public $end;
     public $post;
 
     /**
@@ -148,8 +148,9 @@ class Webhook
      */
     public function __destruct()
     {
-        $date = $this->microtime() - $this->start;
-        $this->accessLog('used time:' . $date);
+        $this->end = $this->microtime();
+        $time = $this->end - $this->start;
+        $this->accessLog('used time:' . $time);
         $memory = $this->memory();
         $this->accessLog('used memory:' . $memory);
         $this->accessLog('end');
