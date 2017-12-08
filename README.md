@@ -14,6 +14,7 @@ $config = array(
    'token_field'   =>  'X-Hub-Signature',
    'access_token'  =>  'xxxxxxxxx',   //token
    'bash_path'     =>  '/data/html/git-update/sh/hexo-pull.sh',  //shell脚本路径
+   'branch'        =>  'master'
 );
 ```
 
@@ -24,7 +25,7 @@ $webhook = new Webhook($config);
 $webhook->run();
 ```
 
-一切就绪后配置 web 服务，并访问 [localhost/git.php]() 即可，请求内容示例为：
+一切就绪后配置 web 服务，webhook 地址为 [localhost/git.php]()，请求内容示例为：
 
 Headers 信息：
 ```PHP
