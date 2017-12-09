@@ -10,6 +10,7 @@ class Webhook
     public $config;
     public $start;
     public $end;
+    public $token;
     public $post;
 
     /**
@@ -17,22 +18,26 @@ class Webhook
      */
     public function __construct($config)
     {
-        $config['log_path'] = isset($config['log_path']) ? : __DIR__ . '/';
-        $config['log_name'] = isset($config['log_name']) ? : 'update_git.log';
-        //默认master分支
-        $config['branch'] = isset($config['branch']) ? : 'master';
+        //注册异常处理
+        set_exception_handler([$this, 'exceptionHandler']);
 
         if (!isset($config['token_field'])) {
-            $this->errorLog('token field not found');
+            throw new Exception('token field not be set');
         }
+
         if (!isset($config['access_token'])) {
-            $this->errorLog('access token not found');
+            throw new Exception('access token not be set');
         }
-        if (!isset($config['bash_path'])) {
-            $this->errorLog('bash file path not found');
+
+        if (!file_exists($config['bash_path'])) {
+            throw new Exception('access token not be set');
         }
+        //默认配置
+        $config['log_path'] = isset($config['log_path']) ? : __DIR__ . '/';
+        $config['log_name'] = isset($config['log_name']) ? : 'update_git.log';
+        $config['branch'] = isset($config['branch']) ? : 'master';
         $this->config = $config;
-        //初始化
+
         $this->start = $this->microtime();
         $this->accessLog('-');
         $this->accessLog('start');
@@ -46,13 +51,17 @@ class Webhook
     public function run()
     {
         //校验token
-        $this->checkToken();
-
-        if ($this->checkBranch() && empty($this->exec())) {
+        if ($this->checkToken()) {
+            echo 'ok';
+        } else {
             echo 'error';
         }
+        //提前返回响应
+        fastcgi_finish_request();
 
-        echo 'ok';
+        if ($this->checkBranch()) {
+            $this->exec();
+        }
     }
 
     /**
@@ -63,18 +72,21 @@ class Webhook
         $field = 'HTTP_' . str_replace('-', '_', strtoupper($this->config['token_field']));
         //获取token
         if (!isset($_SERVER[$field])) {
-            $this->errorLog('access token not be in header', true);
+            throw new Exception('access token not be in header');
         }
-        $token = $_SERVER[$field];
+
         $payload = file_get_contents('php://input');
-        list($algo, $hash) = explode('=', $token, 2);
+        list($algo, $hash) = explode('=', $this->token, 2);
         //计算签名
         $payloadHash = hash_hmac($algo, $payload, $this->config['access_token']);
         //token错误
         if (strcmp($hash, $payloadHash) != 0) {
-            $this->errorLog('access token check failed', true);
+            throw new Exception('access token check failed');
         }
+
         $this->accessLog('access token is ok');
+
+        return true;
     }
 
     /**
@@ -94,12 +106,23 @@ class Webhook
     public function exec()
     {
         $path = $this->config['bash_path'];
-        if (!file_exists($path)) {
-            $this->errorLog('bash file not found');
-        }
+
         $result = shell_exec("sh $path 2>&1");
         $this->accessLog($result);
+
         return $result;
+    }
+
+    /**
+     * 异常处理
+     * @param $exception
+     */
+    public function exceptionHandler($exception)
+    {
+        $msg = $exception->getMessage();
+        $this->errorLog($msg);
+
+        exit($msg);
     }
 
     /**
@@ -116,18 +139,12 @@ class Webhook
     /**
      * 错误日志
      */
-    private function errorLog($errorMessage, $exit_msg_enabled = false)
+    private function errorLog($errorMessage)
     {
         //添加必要数据
         $errorMessage = date(DATE_RFC822) . " -error- " . $errorMessage . "\r\n";
         //调用写入函数
         $this->addToFile($this->config['log_path'] . $this->config['log_name'], $errorMessage);
-        //退出脚本
-        $str = null;
-        if ($exit_msg_enabled) {
-            $str = $errorMessage;
-        }
-        exit($str);
     }
 
     /**
