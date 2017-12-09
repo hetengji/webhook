@@ -10,7 +10,6 @@ class Webhook
     public $config;
     public $start;
     public $end;
-    public $token;
     public $post;
 
     /**
@@ -76,7 +75,7 @@ class Webhook
         }
 
         $payload = file_get_contents('php://input');
-        list($algo, $hash) = explode('=', $this->token, 2);
+        list($algo, $hash) = explode('=', $_SERVER[$field], 2);
         //计算签名
         $payloadHash = hash_hmac($algo, $payload, $this->config['access_token']);
         //token错误
