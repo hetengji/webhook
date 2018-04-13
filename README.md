@@ -59,5 +59,5 @@ POST 参数 Payload：
 PHP_CodeSniffer 是一款自动化的 PHP 代码规范检查工具，详细见 [自动化代码规范检测 — PHP_CodeSniffer](https://www.fanhaobai.com/2018/04/php-code-sniffer.html)。
 
 hook 脚本为：
-* [Bash — Linux&Max 系统](https://github.com/fan-haobai/webhook/tree/master/pre-commit-phpcs/pre-commit)
-* [Python — Win 系统](https://github.com/fan-haobai/webhook/tree/master/pre-commit-phpcs/pre-commit.py)
+* [Bash — Linux&Max 系统](https://github.com/fan-haobai/webhook/blob/master/sh/pre-commit-phpcs/pre-commit)
+* [Python — Win 系统](https://github.com/fan-haobai/webhook/blob/master/sh/pre-commit-phpcs/pre-commit.py)
